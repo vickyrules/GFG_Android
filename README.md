@@ -6,4 +6,6 @@
 
 **GFGNews** is based on the MVVM architecture 
 
-![architecture](https://github.com/vickyrules/vickyrules/assets/73611313/696effd9-4f44-4be6-9b32-739a3472e89a)
+![architecture](https://github.com/vickyrules/GFG_Android/assets/73611313/77681718-7698-4577-ae92-4d5dae1bf6ba)
+
+
