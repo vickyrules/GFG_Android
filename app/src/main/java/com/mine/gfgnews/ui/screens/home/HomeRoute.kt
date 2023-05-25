@@ -5,5 +5,5 @@ import androidx.compose.runtime.Composable
 @Composable
 fun HomeRoute(homeViewModel: HomeViewModel) {
     HomeScreen(homeViewModel = homeViewModel,
-    onRefresh = homeViewModel::refresh)
+    onRetry = homeViewModel::refresh)
 }

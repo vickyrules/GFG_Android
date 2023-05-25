@@ -18,18 +18,10 @@ import com.mine.gfgnews.ui.theme.Gfg
 @Composable
 fun Top_App_Bar(
     title: String = "",
-    navigateUp: () -> Unit = {},
-    canGoBack: Boolean = false
+
 ) {
     TopAppBar(
         title = { Text(text = title) },
-        navigationIcon = {
-            if (canGoBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = null)
-                }
-            }
-        },
         colors = TopAppBarDefaults.smallTopAppBarColors(
             containerColor = Gfg
         )

@@ -19,18 +19,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardDefaults.elevatedCardElevation
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -39,6 +42,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.mine.gfgnews.R
 import com.mine.gfgnews.network.model.Item
 import com.mine.gfgnews.ui.components.Top_App_Bar
@@ -47,33 +52,49 @@ import com.mine.gfgnews.ui.utils.formatDateFromString
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel,
-    onRefresh: () -> Unit,
+    onRetry: () -> Unit,
     homeUiState: HomeUiState = homeViewModel.homeUiState
 ) {
     when (homeUiState) {
-        is HomeUiState.Success -> ResultScreen(newsList = homeUiState.NewsList)
+        is HomeUiState.Success -> ResultScreen(
+            newsList = homeUiState.NewsList,
+            homeViewModel = homeViewModel,
+        )
+
         is HomeUiState.Loading -> LoadingScreen()
-        is HomeUiState.Error -> ErrorScreen(retryAction = onRefresh)
+        is HomeUiState.Error -> ErrorScreen(message = homeUiState.message, retryAction = onRetry)
     }
 
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResultScreen(modifier: Modifier = Modifier, newsList: List<Item>) {
-    val isRefreshing = remember { mutableStateOf(false) }
+fun ResultScreen(
+    modifier: Modifier = Modifier,
+    newsList: List<Item>,
+    homeViewModel: HomeViewModel
+) {
+    val isRefreshing by homeViewModel.isRefreshing.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
+
 
     Scaffold(
         topBar = { Top_App_Bar(title = "GeekForGeeks") }
     ) { innerPadding ->
-        LazyColumn(
-            modifier.fillMaxWidth().padding(innerPadding)
-                .padding(all = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+        SwipeRefresh(
+            modifier = Modifier.padding(innerPadding),
+            state = swipeRefreshState,
+            onRefresh = homeViewModel::refresh
         ) {
-            item { NewsCard(item = newsList.first()) }
-            items(newsList.subList(1, newsList.size)) { item ->
-                ListItems(item = item)
+            LazyColumn(
+                modifier.fillMaxWidth()
+                    .padding(all = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item { NewsCard(item = newsList.first()) }
+                items(newsList.subList(1, newsList.size)) { item ->
+                    ListItems(item = item)
+                }
             }
         }
 
@@ -205,15 +226,19 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
  * The home screen displaying error message with re-attempt button.
  */
 @Composable
-fun ErrorScreen(retryAction: () -> Unit, modifier: Modifier = Modifier) {
+fun ErrorScreen(message: String, retryAction: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Failed")
         Button(onClick = retryAction) {
             Text("retry")
+        }
+
+        Snackbar {
+            Text(text = message)
         }
     }
 }
